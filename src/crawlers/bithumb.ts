@@ -1,14 +1,19 @@
 import Got, { Got as got } from 'got';
 import _ from 'lodash';
 import Cheerio from 'cheerio';
+import Turndown from 'turndown';
 import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
 
 class BithumbCrawler implements ICrawler {
   public got: got;
 
-  public provider: string = 'bithumb';
+  public name: string;
 
-  public constructor(endpoint: string) {
+  public contents: boolean;
+
+  public constructor(name: string, endpoint: string, contents: boolean = true) {
+    this.name = name;
+    this.contents = contents;
     this.got = Got.extend({
       prefixUrl: `${endpoint}/view/`,
     });
@@ -31,7 +36,10 @@ class BithumbCrawler implements ICrawler {
     const res = await this.got.get(`/board-contents/${idx}`);
     const $ = Cheerio.load(res.body);
 
-    const contents = $('.board-content').text();
+    const turndown = new Turndown();
+    const html = $('.board-content').html();
+    if (!html) throw Error('⚠️  | 본문이 없는 글입니다.');
+    const contents = turndown.turndown(html);
     return contents;
   }
 
@@ -47,17 +55,20 @@ class BithumbCrawler implements ICrawler {
           onclick.indexOf(',') - 1,
         );
 
-        if (CrawerController.hasArticle(this.provider, idx)) continue;
+        if (CrawerController.hasArticle(this.name, idx)) continue;
         const title = $.find('td.one-line').text();
-        const contents = await this.getArticleContents(idx);
         const url = `https://cafe.bithumb.com/view/board-contents/${idx}`;
 
-        const article = {
+        const article: IArticle = {
           idx,
           title,
-          contents,
           url,
         };
+
+        if (this.contents) {
+          const contents = await this.getArticleContents(idx);
+          article.contents = contents;
+        }
 
         results.push(article);
       } catch (err) { }

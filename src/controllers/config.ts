@@ -6,22 +6,18 @@ export interface IConfigTelegram {
   chats: number[];
 }
 
-export interface IConfigCrawlerProps {
-  enabled: boolean;
-  endpoint: string;
-}
-
 export interface IConfigCrawler {
-  upbit: IConfigCrawlerProps;
-  bithumb: IConfigCrawlerProps;
-  coinone: IConfigCrawlerProps;
-  binance: IConfigCrawlerProps;
+  name: string;
+  enabled: boolean;
+  protocol: string;
+  endpoint: string;
+  contents: boolean;
 }
 
 export interface IConfig {
   interval: number;
   telegram: IConfigTelegram;
-  crawler: IConfigCrawler;
+  crawler: IConfigCrawler[];
 }
 
 class ConfigController {
@@ -35,24 +31,36 @@ class ConfigController {
       token: '',
       chats: [],
     },
-    crawler: {
-      upbit: {
+    crawler: [
+      {
+        name: '업비트',
         enabled: true,
+        protocol: 'upbit',
         endpoint: 'https://api-manager.upbit.com',
+        contents: true,
       },
-      bithumb: {
+      {
+        name: '빗썸',
         enabled: true,
+        protocol: 'bithumb',
         endpoint: 'https://cafe.bithumb.com',
+        contents: true,
       },
-      coinone: {
+      {
+        name: '코인원',
         enabled: true,
+        protocol: 'coinone',
         endpoint: 'https://i1.coinone.co.kr',
+        contents: true,
       },
-      binance: {
+      {
+        name: '바이낸스',
         enabled: true,
+        protocol: 'binance',
         endpoint: 'https://binance.zendesk.com',
+        contents: true,
       },
-    },
+    ],
   }
 
   public static initConfig() {

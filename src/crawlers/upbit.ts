@@ -5,9 +5,13 @@ import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
 class UpbitCrawler implements ICrawler {
   public got: got;
 
-  public provider: string = 'upbit';
+  public name: string;
 
-  public constructor(endpoint: string) {
+  public contents: boolean;
+
+  public constructor(name: string, endpoint: string, contents: boolean = true) {
+    this.name = name;
+    this.contents = contents;
     this.got = Got.extend({
       prefixUrl: `${endpoint}/api/v1/notices`,
     });
@@ -57,16 +61,19 @@ class UpbitCrawler implements ICrawler {
     for (const item of items) {
       try {
         const { id: idx, title } = item;
-        if (CrawerController.hasArticle(this.provider, idx)) continue;
-        const contents = await this.getArticleContents(idx);
+        if (CrawerController.hasArticle(this.name, idx)) continue;
         const url = `https://upbit.com/service_center/notice?id=${idx}`;
 
-        const article = {
+        const article: IArticle = {
           idx,
           title,
-          contents,
           url,
         };
+
+        if (this.contents) {
+          const contents = await this.getArticleContents(idx);
+          article.contents = contents;
+        }
 
         results.push(article);
       } catch (err) { }

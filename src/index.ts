@@ -10,7 +10,7 @@ try {
   const token: string = ConfigController.get('telegram.token');
   const chats: number[] = ConfigController.get('telegram.chats');
   const interval: number[] = ConfigController.get('interval');
-  const crawler: IConfigCrawler = ConfigController.get('crawler');
+  const crawlers: IConfigCrawler[] = ConfigController.get('crawler');
 
   console.log('👍 | 설정 파일이 로드되었어요.');
 
@@ -22,19 +22,14 @@ try {
     });
   }
 
-  console.log('👍 | 크롤링: ');
+  if (crawlers.length > 0) {
+    console.log('👍 | 크롤링: ');
 
-  const upbit = crawler.upbit.enabled ? '⭕️' : '❌';
-  console.log(`👍 |    - ${upbit} 업비트: ${crawler.upbit.endpoint}`);
-
-  const bithumb = crawler.bithumb.enabled ? '⭕️' : '❌';
-  console.log(`👍 |    - ${bithumb} 빗썸: ${crawler.bithumb.endpoint}`);
-
-  const coinone = crawler.coinone.enabled ? '⭕️' : '❌';
-  console.log(`👍 |    - ${coinone} 코인원: ${crawler.coinone.endpoint}`);
-
-  const binance = crawler.binance.enabled ? '⭕️' : '❌';
-  console.log(`👍 |    - ${binance} 바이낸스: ${crawler.binance.endpoint}`);
+    crawlers.forEach((crawler) => {
+      const status = crawler.enabled ? '⭕️' : '❌';
+      console.log(`👍 |    - ${status} ${crawler.name}: ${crawler.endpoint}`);
+    });
+  }
 
   TelegramController.initTelegram(token, chats);
   CrawerController.initCrawler();

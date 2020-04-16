@@ -6,9 +6,13 @@ import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
 class CoinoneCrawler implements ICrawler {
   public got: got;
 
-  public provider: string = 'coinone';
+  public name: string;
 
-  public constructor(endpoint: string) {
+  public contents: boolean;
+
+  public constructor(name: string, endpoint: string, contents: boolean = true) {
+    this.name = name;
+    this.contents = contents;
     this.got = Got.extend({
       prefixUrl: `${endpoint}/api/talk/notice`,
       rejectUnauthorized: true,
@@ -55,16 +59,20 @@ class CoinoneCrawler implements ICrawler {
     for (const item of items) {
       try {
         const idx = item.id;
-        if (CrawerController.hasArticle(this.provider, idx)) continue;
-        const contents = await this.getArticleContents(idx);
+        if (CrawerController.hasArticle(this.name, idx)) continue;
         const title = `[${item.card_category}] ${item.title}`;
         const url = `https://coinone.co.kr/talk/notice/detail/${idx}`;
-        const article = {
+
+        const article: IArticle = {
           idx,
           title,
-          contents,
           url,
         };
+
+        if (this.contents) {
+          const contents = await this.getArticleContents(idx);
+          article.contents = contents;
+        }
 
         results.push(article);
       } catch (err) { }
