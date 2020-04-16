@@ -1,46 +1,58 @@
 import Fs from 'fs';
 import _ from 'lodash';
 
-interface IConfigCrawlerProps {
-  enabled: boolean,
-  endpoint: string,
+export interface IConfigTelegram {
+  token: string;
+  chats: number[];
 }
 
-interface IConfigCrawler {
+export interface IConfigCrawlerProps {
+  enabled: boolean;
+  endpoint: string;
+}
+
+export interface IConfigCrawler {
   upbit: IConfigCrawlerProps;
   bithumb: IConfigCrawlerProps;
   coinone: IConfigCrawlerProps;
   binance: IConfigCrawlerProps;
 }
 
-interface IConfig {
-  telegram: string,
-  crawler: IConfigCrawler
+export interface IConfig {
+  interval: number;
+  telegram: IConfigTelegram;
+  crawler: IConfigCrawler;
 }
 
 class ConfigController {
   public static readonly path = './config.json';
+
   public static config: IConfig | null = null;
+
   public static readonly defaultConfig: IConfig = {
-    telegram: '',
+    interval: 60,
+    telegram: {
+      token: '',
+      chats: [],
+    },
     crawler: {
       upbit: {
         enabled: true,
-        endpoint: 'https://api-manager.upbit.com'
+        endpoint: 'https://api-manager.upbit.com',
       },
       bithumb: {
         enabled: true,
-        endpoint: 'https://cafe.bithumb.com'
+        endpoint: 'https://cafe.bithumb.com',
       },
       coinone: {
         enabled: true,
-        endpoint: 'https://i1.coinone.co.kr'
+        endpoint: 'https://i1.coinone.co.kr',
       },
       binance: {
         enabled: true,
-        endpoint: 'https://binance.zendesk.com'
-      }
-    }
+        endpoint: 'https://binance.zendesk.com',
+      },
+    },
   }
 
   public static initConfig() {
@@ -50,12 +62,12 @@ class ConfigController {
       obj = JSON.parse(configFile.toString());
     }
 
-    this.config = Object.assign(obj, this.defaultConfig);
+    this.config = Object.assign(this.defaultConfig, obj);
     this.saveConfig();
   }
 
   public static saveConfig() {
-    const str = JSON.stringify(this.config);
+    const str = JSON.stringify(this.config, undefined, 4);
     Fs.writeFileSync(this.path, str);
   }
 

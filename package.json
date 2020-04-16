@@ -12,19 +12,28 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
+    "cloudscraper": "^4.6.0",
     "cron": "^1.8.2",
     "cross-env": "^7.0.2",
     "got": "^10.7.0",
     "lodash": "^4.17.15",
-    "telegraf": "^3.37.0"
+    "request": "^2.88.2",
+    "telegraf": "^3.37.0",
+    "turndown": "^6.0.0"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.17",
     "@types/cron": "^1.7.2",
     "@types/eslint": "^6.8.0",
     "@types/lodash": "^4.14.149",
+    "@types/request": "^2.48.4",
     "@types/tsc-watch": "^4.2.0",
+    "@types/turndown": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.28.0",
+    "@typescript-eslint/parser": "^2.28.0",
     "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2",
     "tsc-watch": "^4.2.3",
     "typescript": "^3.8.3"
   }
