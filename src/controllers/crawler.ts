@@ -17,6 +17,7 @@ export interface IArticle {
 export interface ICrawler {
   name: string;
   suffix: string;
+  protocol: string;
   getLatestArticles(): Promise<IArticle[]>;
 }
 

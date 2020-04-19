@@ -8,6 +8,8 @@ class CoinoneCrawler implements ICrawler {
 
   public name: string;
 
+  public protocol: string = 'coinone';
+
   public contents: boolean;
 
   public cleanSuffix: boolean;

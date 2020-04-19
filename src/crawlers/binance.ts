@@ -8,6 +8,8 @@ class BinanceCrawler implements ICrawler {
 
   public name: string;
 
+  public protocol: string = 'binance';
+
   public contents: boolean;
 
   public cleanSuffix: boolean;

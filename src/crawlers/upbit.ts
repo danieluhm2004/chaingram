@@ -7,8 +7,9 @@ class UpbitCrawler implements ICrawler {
 
   public name: string;
 
-  public contents: boolean;
+  public protocol: string = 'upbit';
 
+  public contents: boolean;
 
   public cleanSuffix: boolean;
 

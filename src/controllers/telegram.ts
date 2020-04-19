@@ -31,16 +31,18 @@ class TelegramController {
 
   public static sendArticle(crawler: ICrawler, article: IArticle) {
     let message = '';
-    message += `💌 #${crawler.name}\n 공지`;
-    const protocol = `${crawler.name.charAt(0)}${crawler.name.slice(1)}`;
-    message += `<a href="${article.url}">${article.title} (${protocol})</a>\n`;
+    const protocol = `${crawler.protocol.charAt(0)}${crawler.protocol.slice(1)}`;
+    message += `💌 #${crawler.name} (${protocol}) 공지\n`;
+    message += `<a href="${article.url}">${article.title}</a>\n`;
     if (article.contents) {
       message += RemoveMD(article.contents
         .replace(/\*\*.*\*\*/g, '')
         .replace(/\\/g, '')
         .replace(/\r\n/g, '\n')
         .replace(/ {1,}\n/g, '\n')
-        .replace(/\n{2,}/g, '\n'));
+        .replace(/\n{2,}/g, '\n')
+        .replace(/!\[.*\]\(.*/g, '')
+        .replace(/".*"\)/g, ''));
 
       if (message.length > 4096) {
         message = `${message.substr(0, 3500)}...`;

@@ -9,6 +9,8 @@ class BithumbCrawler implements ICrawler {
 
   public name: string;
 
+  public protocol: string = 'bithumb';
+
   public contents: boolean;
 
   public cleanSuffix: boolean;
