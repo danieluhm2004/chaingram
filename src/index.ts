@@ -7,7 +7,7 @@ try {
 
   const token: string = ConfigController.get('telegram.token');
   const chats: number[] = ConfigController.get('telegram.chats');
-  const interval: number[] = ConfigController.get('interval');
+  const interval: number = ConfigController.get('interval');
   const crawlers: IConfigCrawler[] = ConfigController.get('crawler');
 
   console.log('👍 | 설정 파일이 로드되었어요.');
@@ -33,8 +33,9 @@ try {
   CrawerController.initCrawler();
 
   console.log('👋 | 모든 준비가 완료되었어요.');
-
-  CrawerController.runCrawler();
+  setInterval(() => {
+    CrawerController.runCrawler();
+  }, interval * 1000);
 } catch (err) {
   console.log(err.message);
 }
