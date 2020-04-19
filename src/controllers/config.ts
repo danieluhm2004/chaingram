@@ -12,6 +12,7 @@ export interface IConfigCrawler {
   protocol: string;
   endpoint: string;
   contents: boolean;
+  cleanSuffix: boolean;
 }
 
 export interface IConfig {
@@ -38,6 +39,7 @@ class ConfigController {
         protocol: 'upbit',
         endpoint: 'https://api-manager.upbit.com',
         contents: true,
+        cleanSuffix: false,
       },
       {
         name: '빗썸',
@@ -45,20 +47,23 @@ class ConfigController {
         protocol: 'bithumb',
         endpoint: 'https://cafe.bithumb.com',
         contents: true,
+        cleanSuffix: false,
       },
       {
         name: '코인원',
         enabled: true,
         protocol: 'coinone',
         endpoint: 'https://i1.coinone.co.kr',
-        contents: true,
+        contents: false,
+        cleanSuffix: false,
       },
       {
         name: '바이낸스',
         enabled: true,
         protocol: 'binance',
         endpoint: 'https://binance.zendesk.com',
-        contents: true,
+        contents: false,
+        cleanSuffix: true,
       },
     ],
   }

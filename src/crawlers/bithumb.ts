@@ -11,9 +11,19 @@ class BithumbCrawler implements ICrawler {
 
   public contents: boolean;
 
-  public constructor(name: string, endpoint: string, contents: boolean = true) {
+  public cleanSuffix: boolean;
+
+  public suffix = 'Fellow Bithumb Users,';
+
+  public constructor(
+    name: string,
+    endpoint: string,
+    contents: boolean = true,
+    cleanSuffix: boolean = false,
+  ) {
     this.name = name;
     this.contents = contents;
+    this.cleanSuffix = cleanSuffix;
     this.got = Got.extend({
       prefixUrl: `${endpoint}/view/`,
     });
@@ -36,11 +46,9 @@ class BithumbCrawler implements ICrawler {
     const res = await this.got.get(`/board-contents/${idx}`);
     const $ = Cheerio.load(res.body);
 
-    const turndown = new Turndown();
     const html = $('.board-content').html();
     if (!html) throw Error('⚠️  | 본문이 없는 글입니다.');
-    const contents = turndown.turndown(html);
-    return contents;
+    return html;
   }
 
   public async toArticle(cheerio: CheerioStatic, items: CheerioElement[]): Promise<IArticle[]> {
@@ -66,7 +74,13 @@ class BithumbCrawler implements ICrawler {
         };
 
         if (this.contents) {
-          const contents = await this.getArticleContents(idx);
+          const turndown = new Turndown();
+          const fulltext = await this.getArticleContents(idx);
+          let contents = turndown.turndown(fulltext);
+          if (this.cleanSuffix) {
+            contents = CrawerController.clearSuffix(this.suffix, contents);
+          }
+
           article.contents = contents;
         }
 

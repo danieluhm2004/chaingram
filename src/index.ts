@@ -1,7 +1,5 @@
-import { CronJob } from 'cron';
 import ConfigController, { IConfigCrawler } from './controllers/config';
 import TelegramController from './controllers/telegram';
-import UpbitCrawler from './crawlers/upbit';
 import CrawerController from './controllers/crawler';
 
 try {

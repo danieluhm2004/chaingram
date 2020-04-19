@@ -9,9 +9,20 @@ class UpbitCrawler implements ICrawler {
 
   public contents: boolean;
 
-  public constructor(name: string, endpoint: string, contents: boolean = true) {
+
+  public cleanSuffix: boolean;
+
+  public suffix = ''
+
+  public constructor(
+    name: string,
+    endpoint: string,
+    contents: boolean = true,
+    cleanSuffix: boolean = false,
+  ) {
     this.name = name;
     this.contents = contents;
+    this.cleanSuffix = cleanSuffix;
     this.got = Got.extend({
       prefixUrl: `${endpoint}/api/v1/notices`,
     });
@@ -71,12 +82,21 @@ class UpbitCrawler implements ICrawler {
         };
 
         if (this.contents) {
-          const contents = await this.getArticleContents(idx);
+          let contents: string = await this.getArticleContents(idx);
+
+          if (this.cleanSuffix) {
+            const regex = /---\r\n\r\n\*{2}\[[A-Za-z0-9]{0,}\]/g;
+            const match = contents.match(regex);
+            if (match && match.length >= 1) {
+              contents = CrawerController.clearSuffix(match[0], contents);
+            }
+          }
+
           article.contents = contents;
         }
 
         results.push(article);
-      } catch (err) { }
+      } catch (err) { console.log(err.message); }
     }
 
     return results;
