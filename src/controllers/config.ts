@@ -39,7 +39,7 @@ class ConfigController {
         protocol: 'upbit',
         endpoint: 'https://api-manager.upbit.com',
         contents: true,
-        cleanSuffix: false,
+        cleanSuffix: true,
       },
       {
         name: '빗썸',
@@ -47,7 +47,7 @@ class ConfigController {
         protocol: 'bithumb',
         endpoint: 'https://cafe.bithumb.com',
         contents: true,
-        cleanSuffix: false,
+        cleanSuffix: true,
       },
       {
         name: '코인원',

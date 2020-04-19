@@ -57,8 +57,8 @@ class CrawerController {
 
   public static runCrawler() {
     console.log('🎒 | 크롤링을 시작합니다.');
+    console.log(`⏰ | 현재 시간은 ${Date()}`);
     this.crawlers.forEach(async (crawler) => {
-      console.log(`⏰ | 현재 시간은 ${Date()}`);
       console.log(`🐶 | ${crawler.name} 크롤링을 진행하고 있습니다.`);
       const articles = await crawler.getLatestArticles();
 

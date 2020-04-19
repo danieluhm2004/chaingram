@@ -31,9 +31,9 @@ class TelegramController {
 
   public static sendArticle(crawler: ICrawler, article: IArticle) {
     let message = '';
-    message += `💌 #${crawler.name}\n`;
+    message += `💌 #${crawler.name}\n 공지`;
     const protocol = `${crawler.name.charAt(0)}${crawler.name.slice(1)}`;
-    message += `<a href="${article.url}">${article.title} (${protocol}) 공지</a>\n`;
+    message += `<a href="${article.url}">${article.title} (${protocol})</a>\n`;
     if (article.contents) {
       message += RemoveMD(article.contents
         .replace(/\*\*.*\*\*/g, '')
