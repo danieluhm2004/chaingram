@@ -73,15 +73,15 @@ class UpbitCrawler implements ICrawler {
     for (const item of items) {
       try {
         const { id: idx, title } = item;
-        if (CrawerController.hasArticle(this.name, idx)) continue;
+        if (CrawerController.hasArticle(this.name, idx)) break;
         const url = `https://upbit.com/service_center/notice?id=${idx}`;
-
         const article: IArticle = {
           idx,
           title,
           url,
         };
 
+        console.log(title);
         if (this.contents) {
           let contents: string = await this.getArticleContents(idx);
 

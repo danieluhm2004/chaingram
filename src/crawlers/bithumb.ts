@@ -65,7 +65,7 @@ class BithumbCrawler implements ICrawler {
           onclick.indexOf(',') - 1,
         );
 
-        if (CrawerController.hasArticle(this.name, idx)) continue;
+        if (CrawerController.hasArticle(this.name, idx)) break;
         const title = $.find('td.one-line').text();
         const url = `https://cafe.bithumb.com/view/board-contents/${idx}`;
 

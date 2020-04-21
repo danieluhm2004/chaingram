@@ -50,7 +50,7 @@ class BinanceCrawler implements ICrawler {
     for (const item of items) {
       try {
         const { id: idx, title, html_url: url } = item;
-        if (CrawerController.hasArticle(this.name, idx)) continue;
+        if (CrawerController.hasArticle(this.name, idx)) break;
         const article: IArticle = {
           idx,
           title,

@@ -33,6 +33,7 @@ try {
   CrawerController.initCrawler();
 
   console.log('👋 | 모든 준비가 완료되었어요.');
+  CrawerController.runCrawler();
   setInterval(() => {
     CrawerController.runCrawler();
   }, interval * 1000);

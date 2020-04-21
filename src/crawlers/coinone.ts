@@ -68,7 +68,7 @@ class CoinoneCrawler implements ICrawler {
     for (const item of items) {
       try {
         const idx = item.id;
-        if (CrawerController.hasArticle(this.name, idx)) continue;
+        if (CrawerController.hasArticle(this.name, idx)) break;
         const title = `[${item.card_category}] ${item.title}`;
         const url = `https://coinone.co.kr/talk/notice/detail/${idx}`;
 
