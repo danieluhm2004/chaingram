@@ -47,8 +47,9 @@ class UpbitCrawler implements ICrawler {
       if (!data.list) throw Error();
       if (!data.fixed_notices) throw Error();
 
-      const lists = _.merge(data.list, data.fixed_notices);
-      const articles = await this.toArticle(lists);
+      const list = await this.toArticle(data.list, false);
+      const notices = await this.toArticle(data.fixed_notices, true);
+      const articles = _.merge(notices, list);
 
       return articles;
     } catch (err) {
@@ -68,12 +69,16 @@ class UpbitCrawler implements ICrawler {
     return data.body;
   }
 
-  public async toArticle(items: any[]): Promise<IArticle[]> {
+  public async toArticle(items: any[], isNotice = false): Promise<IArticle[]> {
     const results: IArticle[] = [];
     for (const item of items) {
       try {
         const { id: idx, title } = item;
-        if (CrawerController.hasArticle(this.name, idx)) break;
+        if (CrawerController.hasArticle(this.name, idx)) {
+          if (isNotice) continue;
+          else break;
+        }
+
         const url = `https://upbit.com/service_center/notice?id=${idx}`;
         const article: IArticle = {
           idx,
@@ -81,7 +86,6 @@ class UpbitCrawler implements ICrawler {
           url,
         };
 
-        console.log(title);
         if (this.contents) {
           let contents: string = await this.getArticleContents(idx);
 
@@ -97,7 +101,7 @@ class UpbitCrawler implements ICrawler {
         }
 
         results.push(article);
-      } catch (err) { console.log(err.message); }
+      } catch (err) { }
     }
 
     return results;
