@@ -36,7 +36,7 @@ class TelegramController {
     message += `<a href="${article.url}">${article.title}</a>\n`;
     if (article.contents) {
       message += RemoveMD(article.contents
-        .replace(/\*\*.*\*\*/g, '')
+        .replace(/\*{2}/g, '')
         .replace(/\\/g, '')
         .replace(/\r\n/g, '\n')
         .replace(/ {1,}\n/g, '\n')

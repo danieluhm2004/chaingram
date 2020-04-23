@@ -3,6 +3,7 @@ import _ from 'lodash';
 import Cheerio from 'cheerio';
 import Turndown from 'turndown';
 import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
+import LogController from '../controllers/log';
 
 class BithumbCrawler implements ICrawler {
   public got: got;
@@ -31,17 +32,23 @@ class BithumbCrawler implements ICrawler {
     });
   }
 
-  public async getLatestArticles(): Promise<IArticle[]> {
-    try {
-      const res = await this.got.get('/boards/43');
-      const $ = Cheerio.load(res.body);
+  public async getLatestArticles(isSetup: boolean): Promise<IArticle[]> {
+    const articles = [];
+    for (let i = 0; i <= (!isSetup ? 0 : 1); i += 1) {
+      const searchParams = {
+        pageNumber: i,
+      };
 
+      const res = await this.got.get('/boards/43',
+        { searchParams });
+
+      const $ = Cheerio.load(res.body);
       const items = $('tbody > tr').toArray();
-      const articles = await this.toArticle($, items);
-      return articles;
-    } catch (err) {
-      throw Error('❌ | 서버에서 잘못된 응답을 반환하였습니다.');
+      const article = await this.toArticle($, items);
+      articles.push(...article);
     }
+
+    return articles;
   }
 
   public async getArticleContents(idx: string) {
@@ -65,7 +72,7 @@ class BithumbCrawler implements ICrawler {
           onclick.indexOf(',') - 1,
         );
 
-        if (CrawerController.hasArticle(this.name, idx)) break;
+        if (CrawerController.hasArticle(this.name, idx)) continue;
         const title = $.find('td.one-line').text();
         const url = `https://cafe.bithumb.com/view/board-contents/${idx}`;
 
@@ -87,7 +94,9 @@ class BithumbCrawler implements ICrawler {
         }
 
         results.push(article);
-      } catch (err) { }
+      } catch (err) {
+        LogController.catch(err);
+      }
     }
 
     return results;

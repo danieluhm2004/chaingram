@@ -1,6 +1,7 @@
 import Got, { Got as got } from 'got';
 import _ from 'lodash';
 import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
+import LogController from '../controllers/log';
 
 class UpbitCrawler implements ICrawler {
   public got: got;
@@ -29,32 +30,31 @@ class UpbitCrawler implements ICrawler {
     });
   }
 
-  public async getLatestArticles(): Promise<IArticle[]> {
-    try {
-      const searchParams = {
-        page: 1,
-        per_page: 20,
-        thread_name: 'general',
-      };
+  public async getLatestArticles(isSetup: boolean): Promise<IArticle[]> {
+    const searchParams = {
+      page: 1,
+      per_page: !isSetup ? 20 : 40,
+      thread_name: 'general',
+    };
 
-      const res: any = await this.got.get('/',
-        { searchParams }).json();
+    const res: any = await this.got.get('/',
+      { searchParams }).json();
 
-      if (!res) throw Error();
-      const { success, data } = res;
-      if (!success) throw Error();
-      if (!data) throw Error();
-      if (!data.list) throw Error();
-      if (!data.fixed_notices) throw Error();
+    if (!res) throw Error();
+    const { success, data } = res;
+    if (!success) throw Error();
+    if (!data) throw Error();
+    if (!data.list) throw Error();
+    if (!data.fixed_notices) throw Error();
 
-      const list = await this.toArticle(data.list, false);
-      const notices = await this.toArticle(data.fixed_notices, true);
-      const articles = _.merge(notices, list);
+    const [list, notices] = await Promise.all([
+      this.toArticle(data.list),
+      this.toArticle(data.fixed_notices),
+    ]);
 
-      return articles;
-    } catch (err) {
-      throw Error('❌ | 서버에서 잘못된 응답을 반환하였습니다.');
-    }
+    const articles = _.merge(notices, list);
+
+    return articles;
   }
 
   public async getArticleContents(idx: string) {
@@ -69,16 +69,12 @@ class UpbitCrawler implements ICrawler {
     return data.body;
   }
 
-  public async toArticle(items: any[], isNotice = false): Promise<IArticle[]> {
+  public async toArticle(items: any[]): Promise<IArticle[]> {
     const results: IArticle[] = [];
     for (const item of items) {
       try {
         const { id: idx, title } = item;
-        if (CrawerController.hasArticle(this.name, idx)) {
-          if (isNotice) continue;
-          else break;
-        }
-
+        if (CrawerController.hasArticle(this.name, idx)) continue;
         const url = `https://upbit.com/service_center/notice?id=${idx}`;
         const article: IArticle = {
           idx,
@@ -101,7 +97,9 @@ class UpbitCrawler implements ICrawler {
         }
 
         results.push(article);
-      } catch (err) { }
+      } catch (err) {
+        LogController.catch(err);
+      }
     }
 
     return results;

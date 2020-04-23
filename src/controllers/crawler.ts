@@ -6,6 +6,7 @@ import TelegramController from './telegram';
 import BithumbCrawler from '../crawlers/bithumb';
 import CoinoneCrawler from '../crawlers/coinone';
 import BinanceCrawler from '../crawlers/binance';
+import LogController from './log';
 
 export interface IArticle {
   idx: string;
@@ -18,7 +19,7 @@ export interface ICrawler {
   name: string;
   suffix: string;
   protocol: string;
-  getLatestArticles(): Promise<IArticle[]>;
+  getLatestArticles(isSetup: boolean): Promise<IArticle[]>;
 }
 
 class CrawerController {
@@ -47,7 +48,7 @@ class CrawerController {
           crawler = new BinanceCrawler(name, endpoint, contents, cleanSuffix);
           break;
         default:
-          console.log(`⚠️  | ${name}는(은) 알 수 없는 프로토콜(${protocol})을 사용하고 있습니다.`);
+          LogController.log(`⚠️  | ${name}는(은) 알 수 없는 프로토콜(${protocol})을 사용하고 있습니다.`);
           continue;
       }
 
@@ -56,18 +57,27 @@ class CrawerController {
     }
   }
 
-  public static runCrawler() {
-    console.log('🎒 | 크롤링을 시작합니다.');
-    console.log(`⏰ | 현재 시간은 ${Date()}`);
+  public static runCrawler(isSetup: boolean) {
+    LogController.log('🎒 | 크롤링을 시작합니다.');
+    LogController.log(`⏰ | 현재 시간은 ${Date()}`);
     this.crawlers.forEach(async (crawler) => {
-      console.log(`🐶 | ${crawler.name} 크롤링을 진행하고 있습니다.`);
-      const articles = await crawler.getLatestArticles();
+      try {
+        LogController.log(`🐶 | ${crawler.name} 크롤링을 진행하고 있습니다.`);
+        const articles = await crawler.getLatestArticles(isSetup);
 
-      articles.reverse();
-      articles.forEach((article) => {
-        try { TelegramController.sendArticle(crawler, article); } catch (err) { }
-        try { CrawerController.writeArticle(crawler, article); } catch (err) { }
-      });
+        articles.reverse();
+        articles.forEach((article) => {
+          try { TelegramController.sendArticle(crawler, article); } catch (err) {
+            LogController.catch(err);
+          }
+
+          try { CrawerController.writeArticle(crawler, article); } catch (err) {
+            LogController.catch(err);
+          }
+        });
+      } catch (err) {
+        LogController.catch(err);
+      }
     });
   }
 

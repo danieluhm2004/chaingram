@@ -2,6 +2,7 @@ import Got, { Got as got } from 'got';
 import _ from 'lodash';
 import Turndown from 'turndown';
 import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
+import LogController from '../controllers/log';
 
 class BinanceCrawler implements ICrawler {
   public got: got;
@@ -30,19 +31,22 @@ class BinanceCrawler implements ICrawler {
     });
   }
 
-  public async getLatestArticles(): Promise<IArticle[]> {
-    try {
-      const res: any = await this.got.get('/articles.json').json();
+  public async getLatestArticles(isSetup: boolean): Promise<IArticle[]> {
+    const searchParams = {
+      page: 1,
+      per_page: !isSetup ? 20 : 40,
+    };
 
-      if (!res) throw Error();
-      const { articles } = res;
-      if (!articles) throw Error();
+    const res: any = await this.got.get('/articles.json',
+      { searchParams }).json();
 
-      const results = await this.toArticle(articles);
-      return results;
-    } catch (err) {
-      throw Error('❌ | 서버에서 잘못된 응답을 반환하였습니다.');
-    }
+    if (!res) throw Error();
+    const { articles } = res;
+    if (!articles) throw Error();
+
+    const results = await this.toArticle(articles);
+
+    return results;
   }
 
   public async toArticle(items: any[]): Promise<IArticle[]> {
@@ -50,7 +54,7 @@ class BinanceCrawler implements ICrawler {
     for (const item of items) {
       try {
         const { id: idx, title, html_url: url } = item;
-        if (CrawerController.hasArticle(this.name, idx)) break;
+        if (CrawerController.hasArticle(this.name, idx)) continue;
         const article: IArticle = {
           idx,
           title,
@@ -69,7 +73,9 @@ class BinanceCrawler implements ICrawler {
         }
 
         results.push(article);
-      } catch (err) { }
+      } catch (err) {
+        LogController.catch(err);
+      }
     }
 
     return results;

@@ -2,6 +2,7 @@ import Got, { Got as got } from 'got';
 import _ from 'lodash';
 import Turndown from 'turndown';
 import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
+import LogController from '../controllers/log';
 
 class CoinoneCrawler implements ICrawler {
   public got: got;
@@ -33,10 +34,11 @@ class CoinoneCrawler implements ICrawler {
     });
   }
 
-  public async getLatestArticles(): Promise<IArticle[]> {
-    try {
+  public async getLatestArticles(isSetup: boolean): Promise<IArticle[]> {
+    const results = [];
+    for (let i = 1; i <= (!isSetup ? 1 : 2); i += 1) {
       const searchParams = {
-        page: 1,
+        page: i,
         searchWord: '',
         searchType: '',
         ordering: '-created_at',
@@ -46,14 +48,12 @@ class CoinoneCrawler implements ICrawler {
         { searchParams }).json();
 
       if (!res) throw Error();
-      const { results } = res;
-      if (!results) throw Error();
-
-      const articles = await this.toArticle(results);
-      return articles;
-    } catch (err) {
-      throw Error('❌ | 서버에서 잘못된 응답을 반환하였습니다.');
+      if (!res.results) throw Error();
+      results.push(...res.results);
     }
+
+    const articles = await this.toArticle(results);
+    return articles;
   }
 
   public async getArticleContents(idx: string) {
@@ -68,7 +68,7 @@ class CoinoneCrawler implements ICrawler {
     for (const item of items) {
       try {
         const idx = item.id;
-        if (CrawerController.hasArticle(this.name, idx)) break;
+        if (CrawerController.hasArticle(this.name, idx)) continue;
         const title = `[${item.card_category}] ${item.title}`;
         const url = `https://coinone.co.kr/talk/notice/detail/${idx}`;
 
@@ -90,7 +90,9 @@ class CoinoneCrawler implements ICrawler {
         }
 
         results.push(article);
-      } catch (err) { }
+      } catch (err) {
+        LogController.catch(err);
+      }
     }
 
     return results;
