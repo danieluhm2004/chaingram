@@ -67,11 +67,12 @@ class CrawerController {
 
         articles.reverse();
         articles.forEach((article) => {
-          try { TelegramController.sendArticle(crawler, article); } catch (err) {
+          try { CrawerController.writeArticle(crawler, article); } catch (err) {
             LogController.catch(err);
           }
 
-          try { CrawerController.writeArticle(crawler, article); } catch (err) {
+          if (isSetup) return;
+          try { TelegramController.sendArticle(crawler, article); } catch (err) {
             LogController.catch(err);
           }
         });
