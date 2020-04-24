@@ -2,6 +2,7 @@ import Fs from 'fs';
 import Path from 'path';
 import ConfigController, { IConfigCrawler } from './config';
 import UpbitCrawler from '../crawlers/upbit';
+import UpbitDisclosureCrawler from '../crawlers/upbit_disclosure';
 import TelegramController from './telegram';
 import BithumbCrawler from '../crawlers/bithumb';
 import CoinoneCrawler from '../crawlers/coinone';
@@ -37,6 +38,9 @@ class CrawerController {
       switch (protocol) {
         case 'upbit':
           crawler = new UpbitCrawler(name, endpoint, contents, cleanSuffix);
+          break;
+        case 'upbit disclosure':
+          crawler = new UpbitDisclosureCrawler(name, endpoint, contents, cleanSuffix);
           break;
         case 'bithumb':
           crawler = new BithumbCrawler(name, endpoint, contents, cleanSuffix);

@@ -42,6 +42,14 @@ class ConfigController {
         cleanSuffix: true,
       },
       {
+        name: '업비트 공시',
+        enabled: true,
+        protocol: 'upbit disclosure',
+        endpoint: 'https://project-team.upbit.com',
+        contents: false,
+        cleanSuffix: false,
+      },
+      {
         name: '빗썸',
         enabled: true,
         protocol: 'bithumb',
