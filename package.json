@@ -15,7 +15,7 @@
     "cheerio": "^1.0.0-rc.3",
     "cross-env": "^7.0.2",
     "got": "^10.7.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "remove-markdown": "^0.3.0",
     "telegraf": "^3.37.0",
     "turndown": "^6.0.0"
