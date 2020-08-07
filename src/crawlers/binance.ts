@@ -27,7 +27,7 @@ class BinanceCrawler implements ICrawler {
     this.contents = contents;
     this.cleanSuffix = cleanSuffix;
     this.got = Got.extend({
-      prefixUrl: `${endpoint}/api/v2/help_center/en-us/categories/115000056351-Announcements`,
+      prefixUrl: `${endpoint}/api/v2/en-us/categories/115000056351-Announcements`,
     });
   }
 
