@@ -1,66 +1,63 @@
-import Telegraf, { ContextMessageUpdate } from 'telegraf';
-import { ExtraEditMessage } from 'telegraf/typings/telegram-types';
 import RemoveMD from 'remove-markdown';
-import { IArticle, ICrawler } from './crawler';
+import telegraf, { Telegraf } from 'telegraf';
+import { IArticle, ICrawler } from '..';
 
-class TelegramController {
+export class TelegramController {
   public static chats: number[];
-
-  public static client: Telegraf<ContextMessageUpdate> | null;
+  public static client: Telegraf | null;
 
   public static initTelegram(token: string, chats: number[]) {
     if (this.client) throw Error('❌ | 이미 텔레그램이 설정된 상태입니다.');
     if (!token) throw Error('❌ | 텔레그램 토큰이 설정되지 않았습니다.');
-    if (token === '') throw Error('❌ | 설정 파일에서 텔레그램 토큰을 설정하여야 합니다.');
-
     this.client = new Telegraf(token);
     this.chats = chats;
   }
 
-  public static send(message: string, options?: ExtraEditMessage) {
+  public static async send(
+    message: string,
+    options?: telegraf.Types.ExtraReplyMessage
+  ): Promise<void> {
     if (!this.client) throw Error('❌ | 텔레그램이 설정되지 않았습니다.');
     const { client } = this;
-    this.chats.forEach((chatId) => {
-      client.telegram.sendMessage(chatId, message, {
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-        ...options,
-      });
-    });
+    await Promise.all(
+      this.chats.map((chatId) =>
+        client.telegram.sendMessage(chatId, message, {
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+          ...options,
+        })
+      )
+    );
   }
 
-  public static sendArticle(crawler: ICrawler, article: IArticle) {
+  public static async sendArticle(
+    crawler: ICrawler,
+    article: IArticle
+  ): Promise<void> {
     let message = '';
-    const protocol = `${crawler.protocol.charAt(0)}${crawler.protocol.slice(1)}`;
-    message += `💌 #${crawler.name} (${protocol}) 공지\n`;
-    message += `<a href="${article.url}">${article.title}</a>\n`;
-    if (article.contents) {
-      message += RemoveMD(article.contents
-        .replace(/\*{2}/g, '')
-        .replace(/\\/g, '')
-        .replace(/\r\n/g, '\n')
-        .replace(/ {1,}\n/g, '\n')
-        .replace(/\n{2,}/g, '\n')
-        .replace(/!\[.*\]\(.*/g, '')
-        .replace(/".*"\)/g, ''));
+    const { name, protocol } = crawler;
+    const { title, url, contents } = article;
+    const displayName = `${name} (${protocol.charAt(0)}${protocol.slice(1)})`;
+    message += `💌 #${displayName} 공지\n`;
+    message += `<a href="${url}">${title}</a>\n`;
+    if (contents) {
+      message += RemoveMD(
+        contents
+          .replace(/\*{2}/g, '')
+          .replace(/\\/g, '')
+          .replace(/\r\n/g, '\n')
+          .replace(/ {1,}\n/g, '\n')
+          .replace(/\n{2,}/g, '\n')
+          .replace(/!\[.*\]\(.*/g, '')
+          .replace(/".*"\)/g, '')
+      );
 
-      if (message.length > 4096) {
-        message = `${message.substr(0, 3500)}...`;
-      }
+      if (message.length > 4096) message = `${message.substr(0, 3500)}...`;
     }
 
-
-    this.send(message, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: `${crawler.name}(으)로 이동`,
-              url: article.url,
-            },
-          ],
-        ],
-      },
+    const text = `${name}(으)로 이동`;
+    await this.send(message, {
+      reply_markup: { inline_keyboard: [[{ text, url }]] },
     });
   }
 
@@ -68,5 +65,3 @@ class TelegramController {
     this.client = null;
   }
 }
-
-export default TelegramController;

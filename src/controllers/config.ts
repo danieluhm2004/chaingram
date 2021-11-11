@@ -1,4 +1,4 @@
-import Fs from 'fs';
+import fs from 'fs';
 import _ from 'lodash';
 
 export interface IConfigTelegram {
@@ -21,11 +21,9 @@ export interface IConfig {
   crawler: IConfigCrawler[];
 }
 
-class ConfigController {
+export class ConfigController {
   public static readonly path = './config.json';
-
   public static config: IConfig | null = null;
-
   public static readonly defaultConfig: IConfig = {
     interval: 60,
     telegram: {
@@ -74,12 +72,12 @@ class ConfigController {
         cleanSuffix: true,
       },
     ],
-  }
+  };
 
   public static initConfig() {
     let obj: IConfig = this.defaultConfig;
-    if (Fs.existsSync(this.path)) {
-      const configFile = Fs.readFileSync(this.path);
+    if (fs.existsSync(this.path)) {
+      const configFile = fs.readFileSync(this.path);
       obj = JSON.parse(configFile.toString());
     }
 
@@ -88,8 +86,8 @@ class ConfigController {
   }
 
   public static saveConfig() {
-    const str = JSON.stringify(this.config, undefined, 4);
-    Fs.writeFileSync(this.path, str);
+    const str = JSON.stringify(this.config, undefined, 2);
+    fs.writeFileSync(this.path, str);
   }
 
   public static get(path: string, defaultValue?: string) {
@@ -103,5 +101,3 @@ class ConfigController {
     this.saveConfig();
   }
 }
-
-export default ConfigController;

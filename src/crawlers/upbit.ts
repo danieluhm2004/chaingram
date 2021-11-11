@@ -1,32 +1,28 @@
-import Got, { Got as got } from 'got';
+import got, { Got } from 'got';
 import _ from 'lodash';
-import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
-import LogController from '../controllers/log';
+import { getRandom } from 'random-useragent';
+import { CrawerController, IArticle, ICrawler, LogController } from '..';
 
-class UpbitCrawler implements ICrawler {
-  public got: got;
-
+export class UpbitCrawler implements ICrawler {
+  public got: Got;
   public name: string;
-
   public protocol: string = 'upbit';
-
   public contents: boolean;
-
   public cleanSuffix: boolean;
-
-  public suffix = ''
+  public suffix = '';
 
   public constructor(
     name: string,
     endpoint: string,
     contents: boolean = true,
-    cleanSuffix: boolean = false,
+    cleanSuffix: boolean = false
   ) {
     this.name = name;
     this.contents = contents;
     this.cleanSuffix = cleanSuffix;
-    this.got = Got.extend({
+    this.got = got.extend({
       prefixUrl: `${endpoint}/api/v1`,
+      headers: { 'User-Agent': getRandom() },
     });
   }
 
@@ -37,7 +33,7 @@ class UpbitCrawler implements ICrawler {
       thread_name: 'general',
     };
 
-    const res: any = await this.got.get('/notices', { searchParams }).json();
+    const res: any = await this.got.get('notices', { searchParams }).json();
 
     if (!res) throw Error();
     const { success, data } = res;
@@ -53,7 +49,7 @@ class UpbitCrawler implements ICrawler {
   }
 
   public async getArticleContents(idx: string) {
-    const res: any = await this.got.get(`/notices/${idx}`).json();
+    const res: any = await this.got.get(`notices/${idx}`).json();
 
     if (!res) throw Error();
     const { success, data } = res;
@@ -70,15 +66,10 @@ class UpbitCrawler implements ICrawler {
         const { id: idx, title } = item;
         if (CrawerController.hasArticle(this.name, idx)) continue;
         const url = `https://upbit.com/service_center/notice?id=${idx}`;
-        const article: IArticle = {
-          idx,
-          title,
-          url,
-        };
+        const article: IArticle = { idx, title, url };
 
         if (this.contents) {
           let contents: string = await this.getArticleContents(idx);
-
           if (this.cleanSuffix) {
             const regex = /---\r\n\r\n\*{2}\[[A-Za-z0-9]{0,}\]/g;
             const match = contents.match(regex);
@@ -91,8 +82,7 @@ class UpbitCrawler implements ICrawler {
         }
 
         results.push(article);
-      } catch (err) {
-        console.log(err);
+      } catch (err: any) {
         LogController.catch(err);
       }
     }
@@ -100,5 +90,3 @@ class UpbitCrawler implements ICrawler {
     return results;
   }
 }
-
-export default UpbitCrawler;

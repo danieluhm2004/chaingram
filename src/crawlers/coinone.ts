@@ -1,36 +1,27 @@
 import Got, { Got as got } from 'got';
-import _ from 'lodash';
-import Turndown from 'turndown';
-import CrawerController, { ICrawler, IArticle } from '../controllers/crawler';
-import LogController from '../controllers/log';
+import turndown from 'turndown';
+import { CrawerController, IArticle, ICrawler, LogController } from '..';
 
-class CoinoneCrawler implements ICrawler {
+export class CoinoneCrawler implements ICrawler {
   public got: got;
-
   public name: string;
-
   public protocol: string = 'coinone';
-
   public contents: boolean;
-
   public cleanSuffix: boolean;
-
   public suffix = '';
 
   public constructor(
     name: string,
     endpoint: string,
     contents: boolean = true,
-    cleanSuffix: boolean = false,
+    cleanSuffix: boolean = false
   ) {
     this.name = name;
     this.contents = contents;
     this.cleanSuffix = cleanSuffix;
     this.got = Got.extend({
-      prefixUrl: `${endpoint}/api/talk/notice`,
-      headers: {
-        referer: 'https://coinone.co.kr/talk/notice',
-      },
+      prefixUrl: `${endpoint}/api/talk`,
+      headers: { referer: 'https://coinone.co.kr/talk/notice' },
     });
   }
 
@@ -44,21 +35,17 @@ class CoinoneCrawler implements ICrawler {
         ordering: '-created_at',
       };
 
-      const res: any = await this.got.get('/',
-        { searchParams }).json();
-
-      if (!res) throw Error();
-      if (!res.results) throw Error();
+      const opts = { searchParams };
+      const res: any = await this.got.get('notice', opts).json();
+      if (!res || !res.results) throw Error();
       results.push(...res.results);
     }
 
-    const articles = await this.toArticle(results);
-    return articles;
+    return this.toArticle(results);
   }
 
   public async getArticleContents(idx: string) {
-    const res: any = await this.got.get(`/${idx}`).json();
-
+    const res: any = await this.got.get(idx).json();
     if (!res || !res.content) throw Error();
     return res.content;
   }
@@ -69,19 +56,13 @@ class CoinoneCrawler implements ICrawler {
       try {
         const idx = item.id;
         if (CrawerController.hasArticle(this.name, idx)) continue;
-        const title = `[${item.card_category}] ${item.title}`;
+        const title = `${item.card_category} / ${item.title}`;
         const url = `https://coinone.co.kr/talk/notice/detail/${idx}`;
-
-        const article: IArticle = {
-          idx,
-          title,
-          url,
-        };
+        const article: IArticle = { idx, title, url };
 
         if (this.contents) {
-          const turndown = new Turndown();
           const fulltext = await this.getArticleContents(idx);
-          let contents = turndown.turndown(fulltext);
+          let contents = new turndown().turndown(fulltext);
           if (this.cleanSuffix) {
             contents = CrawerController.clearSuffix(this.suffix, contents);
           }
@@ -90,7 +71,7 @@ class CoinoneCrawler implements ICrawler {
         }
 
         results.push(article);
-      } catch (err) {
+      } catch (err: any) {
         LogController.catch(err);
       }
     }
@@ -98,5 +79,3 @@ class CoinoneCrawler implements ICrawler {
     return results;
   }
 }
-
-export default CoinoneCrawler;

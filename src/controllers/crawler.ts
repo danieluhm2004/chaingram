@@ -1,13 +1,16 @@
-import Fs from 'fs';
-import Path from 'path';
-import ConfigController, { IConfigCrawler } from './config';
-import UpbitCrawler from '../crawlers/upbit';
-import UpbitDisclosureCrawler from '../crawlers/upbit_disclosure';
-import TelegramController from './telegram';
-import BithumbCrawler from '../crawlers/bithumb';
-import CoinoneCrawler from '../crawlers/coinone';
-import BinanceCrawler from '../crawlers/binance';
-import LogController from './log';
+import fs from 'fs';
+import path from 'path';
+import {
+  BinanceCrawler,
+  BithumbCrawler,
+  CoinoneCrawler,
+  ConfigController,
+  IConfigCrawler,
+  LogController,
+  TelegramController,
+  UpbitCrawler,
+  UpbitDisclosureCrawler,
+} from '..';
 
 export interface IArticle {
   idx: string;
@@ -23,24 +26,33 @@ export interface ICrawler {
   getLatestArticles(isSetup: boolean): Promise<IArticle[]>;
 }
 
-class CrawerController {
+export class CrawerController {
   public static crawlers: ICrawler[] = [];
 
   public static initCrawler() {
     const crawlers: IConfigCrawler[] = ConfigController.get('crawler');
 
     for (const {
-      enabled, name, endpoint, protocol, contents, cleanSuffix,
+      enabled,
+      name,
+      endpoint,
+      protocol,
+      contents,
+      cleanSuffix,
     } of crawlers) {
       if (!enabled) continue;
       let crawler: ICrawler | null = null;
-
       switch (protocol) {
         case 'upbit':
           crawler = new UpbitCrawler(name, endpoint, contents, cleanSuffix);
           break;
         case 'upbit disclosure':
-          crawler = new UpbitDisclosureCrawler(name, endpoint, contents, cleanSuffix);
+          crawler = new UpbitDisclosureCrawler(
+            name,
+            endpoint,
+            contents,
+            cleanSuffix
+          );
           break;
         case 'bithumb':
           crawler = new BithumbCrawler(name, endpoint, contents, cleanSuffix);
@@ -52,7 +64,9 @@ class CrawerController {
           crawler = new BinanceCrawler(name, endpoint, contents, cleanSuffix);
           break;
         default:
-          LogController.log(`⚠️  | ${name}는(은) 알 수 없는 프로토콜(${protocol})을 사용하고 있습니다.`);
+          LogController.log(
+            `⚠️  | ${name}는(은) 알 수 없는 프로토콜(${protocol})을 사용하고 있습니다.`
+          );
           continue;
       }
 
@@ -61,59 +75,57 @@ class CrawerController {
     }
   }
 
-  public static runCrawler(isSetup: boolean) {
+  public static async runCrawler(isSetup: boolean): Promise<void> {
     LogController.log('🎒 | 크롤링을 시작합니다.');
     LogController.log(`⏰ | 현재 시간은 ${Date()}`);
-    this.crawlers.forEach(async (crawler) => {
+    for (const crawler of this.crawlers) {
       try {
         LogController.log(`🐶 | ${crawler.name} 크롤링을 진행하고 있습니다.`);
         const articles = await crawler.getLatestArticles(isSetup);
 
         articles.reverse();
-        articles.forEach((article) => {
-          try { CrawerController.writeArticle(crawler, article); } catch (err) {
+        for (const article of articles) {
+          try {
+            CrawerController.writeArticle(crawler, article);
+          } catch (err: any) {
             LogController.catch(err);
           }
 
-          if (isSetup) return;
-          try { TelegramController.sendArticle(crawler, article); } catch (err) {
+          try {
+            if (isSetup) continue;
+            await TelegramController.sendArticle(crawler, article);
+          } catch (err: any) {
             LogController.catch(err);
           }
-        });
-      } catch (err) {
+        }
+      } catch (err: any) {
         LogController.catch(err);
       }
-    });
+    }
   }
 
   public static hasArticle(name: string, idx: string): boolean {
-    const path = Path.join(
-      ConfigController.get('logs', 'logs'),
-      name, `${idx}.md`,
-    );
-
-    const exists = Fs.existsSync(path);
+    const logPath = ConfigController.get('logs', 'logs');
+    const articlePath = path.join(logPath, name, `${idx}.md`);
+    const exists = fs.existsSync(articlePath);
     return exists;
   }
 
   public static writeArticle(crawler: ICrawler, article: IArticle) {
-    const path = Path.join(
-      ConfigController.get('logs', 'logs'),
-      crawler.name, `${article.idx}.md`,
-    );
-
-    Fs.mkdirSync(
-      path.substr(0, path.lastIndexOf('/')),
-      { recursive: true },
-    );
+    const { idx } = article;
+    const { name } = crawler;
+    const logPath = ConfigController.get('logs', 'logs');
+    const articlePath = path.join(logPath, name, `${idx}.md`);
+    fs.mkdirSync(articlePath.substr(0, articlePath.lastIndexOf('/')), {
+      recursive: true,
+    });
 
     let contents = '';
     contents += `# ${article.title}\n\n`;
-    if (article.contents) { contents += `${article.contents}\n`; }
+    if (article.contents) contents += `${article.contents}\n`;
     contents += '---\n';
     contents += `> 출처: [${article.url}](${article.url})`;
-
-    Fs.writeFileSync(path, contents);
+    fs.writeFileSync(articlePath, contents);
   }
 
   public static clearSuffix(suffix: string, contents: string): string {
@@ -122,5 +134,3 @@ class CrawerController {
     return contents.substring(0, iof);
   }
 }
-
-export default CrawerController;
